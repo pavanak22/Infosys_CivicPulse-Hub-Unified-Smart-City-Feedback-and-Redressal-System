@@ -1,12 +1,22 @@
-# React + Vite
+# 🏙️ Infosys CivicPulse Hub  
+### Unified Smart City Feedback and Redressal System  
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> 🚀 A smart web application designed to streamline citizen feedback, complaint tracking, and redressal across multiple city departments.  
+> Built using **React + Vite**, the platform bridges the gap between **users**, **departments**, and **administrators** for efficient complaint handling and better transparency.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🌐 Live Project
+🔗 **[View Live Site](https://pavanak22.github.io/Infosys_CivicPulse-Hub-Unified-Smart-City-Feedback-and-Redressal-System/)**  
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 💻 Source Code
+You are currently viewing the **full source code** of this project.  
+Clone or fork this repository to explore, run, or contribute to the development.
+
+```bash
+git clone https://github.com/pavanak22/Infosys_CivicPulse-Hub-Unified-Smart-City-Feedback-and-Redressal-System.git
+cd Infosys_CivicPulse-Hub-Unified-Smart-City-Feedback-and-Redressal-System
+npm install
+npm run dev

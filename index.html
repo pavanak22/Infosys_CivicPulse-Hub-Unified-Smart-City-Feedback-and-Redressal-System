@@ -3,10 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Infosys App</title>
+    <title>Infosys CivicPulse Hub</title>
+
+    <!-- Ensures correct path resolution under GitHub Pages subfolder -->
+    <base href="/Infosys_CivicPulse-Hub-Unified-Smart-City-Feedback-and-Redressal-System/" />
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Important: use relative path for Vite entry file -->
+    <script type="module" src="./src/main.jsx"></script>
   </body>
 </html>

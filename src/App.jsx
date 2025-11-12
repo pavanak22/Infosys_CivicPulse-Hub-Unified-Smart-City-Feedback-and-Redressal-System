@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 // Auth Pages
 import LoginSelection from "./components/Auth/LoginSelection.jsx";
 import UserLogin from "./components/Auth/UserLogin.jsx";
-import Register from "./components/Auth/Register.jsx"; // Updated import
+import Register from "./components/Auth/Register.jsx";
 import AdminLogin from "./components/Auth/AdminLogin.jsx";
 import DepartmentLogin from "./components/Auth/DepartmentLogin.jsx";
 
@@ -15,12 +15,13 @@ import DepartmentDashboard from "./components/Dashboards/DepartmentDashboard/Dep
 
 function App() {
   return (
-    <Router>
+    // 👇 Add basename to make all routes work on GitHub Pages
+    <Router basename="/Infosys_CivicPulse-Hub-Unified-Smart-City-Feedback-and-Redressal-System">
       <Routes>
         {/* ======================= Public Routes ======================= */}
         <Route path="/" element={<LoginSelection />} />
         <Route path="/user-login" element={<UserLogin />} />
-        <Route path="/register" element={<Register />} /> {/* Updated route */}
+        <Route path="/register" element={<Register />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/department-login" element={<DepartmentLogin />} />
 

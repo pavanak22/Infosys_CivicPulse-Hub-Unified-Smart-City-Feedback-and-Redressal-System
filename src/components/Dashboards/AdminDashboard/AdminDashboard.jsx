@@ -8,6 +8,7 @@ import {
   FaChartPie,
   FaBolt,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 import AdminTrackComplaints from "./AdminTrackComplaints.jsx";
 import AdminFeedback from "../../Feedback/AdminFeedback.jsx";
@@ -18,6 +19,7 @@ export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [complaints, setComplaints] = useState([]);
   const [admin, setAdmin] = useState(null);
+  const navigate = useNavigate();
 
   // ✅ Fetch and auto-refresh complaints when data changes anywhere
   useEffect(() => {
@@ -32,20 +34,22 @@ export default function AdminDashboard() {
 
     const loggedAdmin = JSON.parse(localStorage.getItem("loggedInAdmin"));
     if (loggedAdmin) setAdmin(loggedAdmin);
+    else navigate("admin-login"); // ✅ basename-aware redirect
 
     return () => {
       window.removeEventListener("complaintsUpdated", loadComplaints);
       window.removeEventListener("storage", loadComplaints);
     };
-  }, []);
+  }, [navigate]);
 
   const total = complaints.length;
   const resolved = complaints.filter((c) => c.status === "Closed").length;
   const pending = complaints.filter((c) => c.status !== "Closed").length;
 
+  // ✅ Updated logout handler for GitHub Pages
   const handleLogout = () => {
     localStorage.removeItem("loggedInAdmin");
-    window.location.href = "/loginselection";
+    navigate("loginselection", { replace: true }); // ✅ no leading slash, works with basename
   };
 
   const renderSection = () => {
@@ -129,6 +133,7 @@ export default function AdminDashboard() {
           </li>
         </ul>
 
+        {/* ✅ Fixed Logout Button */}
         <button className="logout-btn" onClick={handleLogout}>
           <FaSignOutAlt /> Logout
         </button>

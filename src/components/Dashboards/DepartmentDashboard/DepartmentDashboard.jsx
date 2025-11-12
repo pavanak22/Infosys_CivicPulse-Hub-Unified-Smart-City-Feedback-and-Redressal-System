@@ -39,10 +39,10 @@ export default function DepartmentDashboard() {
     setComplaints(storedComplaints);
   }, []);
 
-  // --- Handlers ---
   const handleLogout = () => {
     localStorage.removeItem("loggedDept");
-    window.location.href = "/loginselection";
+    window.location.href =
+      "/Infosys_CivicPulse-Hub-Unified-Smart-City-Feedback-and-Redressal-System/loginselection";
   };
 
   const handleInputChange = (e) =>
@@ -51,13 +51,11 @@ export default function DepartmentDashboard() {
   const handleAddOrEdit = (e) => {
     e.preventDefault();
     if (editingDept) {
-      // Edit existing
       const updated = departments.map((d) =>
         d.id === editingDept.id ? { ...formData, id: d.id } : d
       );
       setDepartments(updated);
     } else {
-      // Add new
       const newDept = { ...formData, id: Date.now(), employees: [] };
       setDepartments([...departments, newDept]);
     }
@@ -83,7 +81,6 @@ export default function DepartmentDashboard() {
   const handleDelete = (id) =>
     setDepartments(departments.filter((d) => d.id !== id));
 
-  // --- Stats ---
   const total = complaints.length;
   const resolved = complaints.filter(
     (c) => c.status === "Closed" || c.status === "Resolved"
@@ -92,7 +89,6 @@ export default function DepartmentDashboard() {
     (c) => c.status !== "Closed" && c.status !== "Resolved"
   ).length;
 
-  // --- Section Rendering ---
   const renderSection = () => {
     switch (activeSection) {
       case "track":
@@ -102,8 +98,6 @@ export default function DepartmentDashboard() {
         return (
           <div className="welcome-section">
             <h1 className="welcome-title">Departments</h1>
-
-            {/* Department Cards */}
             <div className="dept-grid">
               {departments.map((d) => (
                 <div key={d.id} className="card neon">
@@ -126,7 +120,6 @@ export default function DepartmentDashboard() {
                 </div>
               ))}
 
-              {/* Add Department Button (Moved to End) */}
               <div
                 className="card neon add-card"
                 onClick={() => {
@@ -139,7 +132,6 @@ export default function DepartmentDashboard() {
               </div>
             </div>
 
-            {/* Add/Edit Department Form */}
             {showForm && (
               <div className="form-popup">
                 <form className="form-box" onSubmit={handleAddOrEdit}>
@@ -195,14 +187,14 @@ export default function DepartmentDashboard() {
                 <p>{total}</p>
               </div>
               <div className="card neon">
-                <FaCheckCircle className="icon" />
-                <h3>Resolved</h3>
-                <p>{resolved}</p>
-              </div>
-              <div className="card neon">
                 <FaUsers className="icon" />
                 <h3>Pending</h3>
                 <p>{pending}</p>
+              </div>
+              <div className="card neon">
+                <FaCheckCircle className="icon" />
+                <h3>Resolved</h3>
+                <p>{resolved}</p>
               </div>
             </div>
           </div>
@@ -212,7 +204,6 @@ export default function DepartmentDashboard() {
 
   return (
     <div className="dashboard-container">
-      {/* Sidebar */}
       <aside className="sidebar">
         <h2 className="sidebar-title">Civic Hub</h2>
         <ul className="sidebar-menu">
@@ -235,10 +226,9 @@ export default function DepartmentDashboard() {
         </button>
       </aside>
 
-      {/* Main Content */}
       <main className="main-content">{renderSection()}</main>
 
-      {/* Styles */}
+      {/* === Neon UI Styles === */}
       <style jsx="true">{`
         .dashboard-container {
           display: flex;
@@ -248,39 +238,253 @@ export default function DepartmentDashboard() {
           font-family: "Poppins", sans-serif;
         }
 
-        /* Sidebar same as before */
-        .sidebar { width: 240px; background: rgba(10,15,20,0.9); border-right: 2px solid #00eaff55; box-shadow: inset 0 0 25px #00eaff33, 0 0 20px #00eaff22; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; }
-        .sidebar-title { font-size: 1.5rem; text-align: center; color: #00eaff; margin-bottom: 30px; text-shadow: 0 0 10px #00eaff; }
-        .sidebar-menu li { padding: 12px 10px; color: #ccc; cursor: pointer; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; transition: 0.3s; }
-        .sidebar-menu li.active, .sidebar-menu li:hover { color: #00eaff; background: rgba(0,234,255,0.1); transform: translateX(5px); box-shadow: 0 0 10px #00eaff33; }
+        .sidebar {
+          width: 240px;
+          background: rgba(10, 15, 20, 0.9);
+          border-right: 2px solid #00eaff55;
+          box-shadow: inset 0 0 25px #00eaff33, 0 0 20px #00eaff22;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 20px;
+        }
 
-        .logout-btn { background: linear-gradient(90deg, #ff4444, #cc0000); border: none; color: #fff; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .logout-btn:hover { background: linear-gradient(90deg, #ff6666, #ff0000); transform: scale(1.05); }
+        .sidebar-title {
+          font-size: 1.7rem;
+          text-align: center;
+          color: #00eaff;
+          font-weight: 700;
+          text-shadow: 0 0 15px #00eaff;
+          margin-bottom: 30px;
+        }
 
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-        .welcome-title { font-size: 2.2rem; text-align: center; color: #00eaff; text-shadow: 0 0 15px #00eaff, 0 0 25px #7a00ff; margin-bottom: 40px; }
+        .sidebar-menu li {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px;
+          color: #ccc;
+          cursor: pointer;
+          border-radius: 8px;
+          transition: all 0.3s ease;
+          margin-bottom: 8px;
+        }
 
-        .cards-container, .dept-grid { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
-        .card { background: rgba(20,25,35,0.85); border-radius: 15px; padding: 25px; text-align: center; color: #ddd; transition: 0.3s; min-width: 220px; max-width: 300px; }
-        .card.neon { border: 1px solid #00eaff44; box-shadow: 0 0 15px #00eaff33, 0 0 30px #7a00ff22; }
-        .card.neon:hover { box-shadow: 0 0 25px #00eaffaa, 0 0 50px #7a00ffaa; transform: translateY(-5px); }
+        .sidebar-menu li.active,
+        .sidebar-menu li:hover {
+          color: #00eaff;
+          background: rgba(0, 234, 255, 0.1);
+          transform: translateX(5px);
+          box-shadow: 0 0 10px #00eaff33;
+        }
 
-        .add-card { cursor: pointer; color: #00eaff; }
-        .add-card:hover { background: rgba(0,234,255,0.1); }
+        .logout-btn {
+          background: linear-gradient(90deg, #ff4444, #cc0000);
+          border: none;
+          color: #fff;
+          font-weight: 600;
+          padding: 10px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: 0.3s;
+        }
 
-        .btn-group { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
-        .edit-btn, .delete-btn { border: none; border-radius: 8px; padding: 6px 10px; cursor: pointer; color: #fff; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
-        .edit-btn { background: #007bff; }
-        .edit-btn:hover { background: #339aff; }
-        .delete-btn { background: #d9534f; }
-        .delete-btn:hover { background: #ff6666; }
+        .logout-btn:hover {
+          background: linear-gradient(90deg, #ff6666, #ff0000);
+          transform: scale(1.05);
+        }
 
-        .form-popup { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; }
-        .form-box { background: #0b1a2a; padding: 25px; border-radius: 15px; box-shadow: 0 0 20px #00eaff88; width: 400px; display: flex; flex-direction: column; gap: 12px; }
-        .form-box input { padding: 10px; border: none; border-radius: 8px; outline: none; }
-        .form-actions { display: flex; justify-content: space-between; margin-top: 10px; }
-        .save-btn { background: #00eaff; color: #000; padding: 8px 15px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .cancel-btn { background: #ff4444; padding: 8px 15px; border-radius: 8px; font-weight: 600; cursor: pointer; color: #fff; }
+        .main-content {
+          flex: 1;
+          padding: 40px;
+          overflow-y: auto;
+        }
+
+        .welcome-title {
+          font-size: 2.4rem;
+          text-align: center;
+          color: #00eaff;
+          text-shadow: 0 0 20px #00eaff;
+          margin-bottom: 40px;
+          font-weight: 700;
+        }
+
+        /* === NEW HORIZONTAL CARDS === */
+        .cards-container {
+          display: flex;
+          justify-content: center;
+          align-items: stretch;
+          gap: 25px;
+          flex-wrap: wrap;
+        }
+
+        /* === DEPARTMENT GRID === */
+        .dept-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 25px;
+          justify-items: center;
+        }
+
+        .card {
+          background: rgba(15, 20, 30, 0.9);
+          border-radius: 15px;
+          padding: 25px;
+          width: 320px;
+          text-align: center;
+          box-shadow: 0 0 20px #00eaff22, inset 0 0 10px #00eaff22;
+          border: 1px solid #00eaff55;
+          transition: all 0.3s ease;
+        }
+
+        .card:hover {
+          box-shadow: 0 0 30px #00eaffaa, 0 0 60px #00eaff55;
+          transform: translateY(-5px);
+        }
+
+        .icon {
+          font-size: 1.5rem;
+          color: #00eaff;
+          margin-bottom: 10px;
+        }
+
+        .card h3 {
+          color: #00eaff;
+          font-weight: 600;
+          margin-bottom: 10px;
+        }
+
+        .card p {
+          color: #ddd;
+          font-size: 0.95rem;
+          margin: 4px 0;
+        }
+
+        .btn-group {
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+          margin-top: 15px;
+        }
+
+        .edit-btn,
+        .delete-btn {
+          border: none;
+          border-radius: 8px;
+          padding: 6px 12px;
+          cursor: pointer;
+          color: #fff;
+          font-size: 0.9rem;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-weight: 600;
+        }
+
+        .edit-btn {
+          background: #007bff;
+          box-shadow: 0 0 10px #007bff66;
+        }
+
+        .edit-btn:hover {
+          background: #339aff;
+          box-shadow: 0 0 15px #007bffaa;
+        }
+
+        .delete-btn {
+          background: #d9534f;
+          box-shadow: 0 0 10px #ff333366;
+        }
+
+        .delete-btn:hover {
+          background: #ff6666;
+          box-shadow: 0 0 15px #ff3333aa;
+        }
+
+        /* === FORM POPUP === */
+        .form-popup {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.8);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+
+        .form-box {
+          background: rgba(10, 15, 25, 0.95);
+          padding: 30px 35px;
+          border-radius: 20px;
+          box-shadow: 0 0 40px #00eaff66, inset 0 0 15px #00eaff33;
+          width: 420px;
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+          border: 1px solid #00eaff55;
+          text-align: center;
+        }
+
+        .form-box h2 {
+          color: #00eaff;
+          font-size: 1.6rem;
+          font-weight: 700;
+          margin-bottom: 10px;
+          text-shadow: 0 0 15px #00eaff;
+        }
+
+        .form-box input {
+          padding: 10px 12px;
+          border: none;
+          border-radius: 10px;
+          outline: none;
+          background: rgba(255, 255, 255, 0.1);
+          color: #fff;
+          font-size: 0.95rem;
+          transition: 0.3s;
+        }
+
+        .form-box input:focus {
+          box-shadow: 0 0 10px #00eaff;
+          border: 1px solid #00eaff66;
+        }
+
+        .form-actions {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 10px;
+        }
+
+        .save-btn {
+          background: #00eaff;
+          color: #000;
+          font-weight: 700;
+          padding: 8px 20px;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: 0.3s;
+        }
+
+        .save-btn:hover {
+          box-shadow: 0 0 15px #00eaffaa;
+        }
+
+        .cancel-btn {
+          background: #ff4444;
+          color: #fff;
+          font-weight: 700;
+          padding: 8px 20px;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: 0.3s;
+        }
+
+        .cancel-btn:hover {
+          box-shadow: 0 0 15px #ff4444aa;
+        }
       `}</style>
     </div>
   );

@@ -18,16 +18,17 @@ export default function UserDashboard() {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) navigate("/user-login");
+    if (!user) navigate("user-login"); // ✅ removed leading slash for GitHub Pages
     else setLoggedInUser(user);
 
     const storedFeedbacks = JSON.parse(localStorage.getItem("feedbacks") || "[]");
     setFeedbacks(storedFeedbacks);
   }, [navigate]);
 
+  // ✅ Updated logout — fixed for GitHub Pages subpath
   const handleLogout = () => {
     localStorage.removeItem("loggedInUser");
-    navigate("/user-login");
+    navigate("user-login", { replace: true }); // ✅ basename-aware navigation
   };
 
   const renderContent = () => {
@@ -103,6 +104,7 @@ export default function UserDashboard() {
           </li>
         </ul>
 
+        {/* ✅ Updated logout button */}
         <button className="logout-btn" onClick={handleLogout}>
           <AiOutlineLogout /> Logout
         </button>

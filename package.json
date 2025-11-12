@@ -1,5 +1,5 @@
 {
-  "name": "infosys-app",
+  "name": "infosys-civicpulse-hub",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -28,9 +28,8 @@
     "gh-pages": "^6.3.0",
     "vite": "^7.1.6"
   },
-  "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
-  "main": "eslint.config.js",
-  "keywords": [],
+  "main": "index.html",
   "author": "Kakumani Pavana",
-  "license": "MIT"
+  "license": "MIT",
+  "description": "Infosys CivicPulse Hub - Unified Smart City Feedback and Redressal System built with React + Vite, deployed via GitHub Pages."
 }

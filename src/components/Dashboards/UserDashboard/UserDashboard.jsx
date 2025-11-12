@@ -10,6 +10,9 @@ import {
   AiOutlineLogout,
 } from "react-icons/ai";
 
+// 🔹 Backend integration
+import { submitComplaint } from "../../../api.js";
+
 export default function UserDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("home");
@@ -18,17 +21,37 @@ export default function UserDashboard() {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) navigate("user-login"); // ✅ removed leading slash for GitHub Pages
+    if (!user) navigate("user-login"); // ✅ GitHub Pages friendly
     else setLoggedInUser(user);
 
     const storedFeedbacks = JSON.parse(localStorage.getItem("feedbacks") || "[]");
     setFeedbacks(storedFeedbacks);
   }, [navigate]);
 
-  // ✅ Updated logout — fixed for GitHub Pages subpath
+  // ✅ Logout handler
   const handleLogout = () => {
     localStorage.removeItem("loggedInUser");
-    navigate("user-login", { replace: true }); // ✅ basename-aware navigation
+    navigate("user-login", { replace: true });
+  };
+
+  // ✅ Complaint submission handler (backend + event trigger)
+  const handleComplaintSubmit = async (complaintData) => {
+    try {
+      await submitComplaint({
+        ...complaintData,
+        raisedBy: loggedInUser?.email,
+      });
+
+      alert("Complaint submitted successfully!");
+
+      // 🔄 Dispatch global refresh event — Admin & Department auto-refresh
+      window.dispatchEvent(
+        new CustomEvent("app:refresh", { detail: { refreshComplaints: true } })
+      );
+    } catch (error) {
+      console.error("Error submitting complaint:", error);
+      alert("Failed to submit complaint. Please try again later.");
+    }
   };
 
   const renderContent = () => {
@@ -44,14 +67,25 @@ export default function UserDashboard() {
             </p>
           </div>
         );
+
       case "submit":
-        return <SubmitComplaint loggedInUser={loggedInUser} />;
+        return (
+          <SubmitComplaint
+            loggedInUser={loggedInUser}
+            onSubmitComplaint={handleComplaintSubmit}
+          />
+        );
+
       case "track":
         return (
           <div className="tracking-wrapper">
-            <ComplaintTracking feedbacks={feedbacks} setFeedbacks={setFeedbacks} />
+            <ComplaintTracking
+              feedbacks={feedbacks}
+              setFeedbacks={setFeedbacks}
+            />
           </div>
         );
+
       case "profile":
         return (
           <div className="profile-card">
@@ -67,6 +101,7 @@ export default function UserDashboard() {
             </p>
           </div>
         );
+
       default:
         return null;
     }
@@ -104,7 +139,6 @@ export default function UserDashboard() {
           </li>
         </ul>
 
-        {/* ✅ Updated logout button */}
         <button className="logout-btn" onClick={handleLogout}>
           <AiOutlineLogout /> Logout
         </button>
@@ -113,7 +147,7 @@ export default function UserDashboard() {
       {/* Main Content */}
       <main className="user-main">{renderContent()}</main>
 
-      {/* Inline Styles */}
+      {/* === Styles === */}
       <style jsx="true">{`
         .user-dashboard {
           display: flex;

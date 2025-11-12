@@ -7,36 +7,79 @@ import {
   FaUsers,
   FaCheckCircle,
   FaCommentDots,
-  FaPlus,
-  FaEdit,
-  FaTrash,
 } from "react-icons/fa";
 import { departments as deptData } from "../../Data/department.js";
 import DeptComplaintTracking from "./DeptComplaintTracking.jsx";
 import DepartmentFeedback from "../../Feedback/DepartmentFeedback.jsx";
+import DepartmentDetails from "./DepartmentDetails.jsx";
+
+// 🔹 Backend API imports (correct relative path from this file)
+import {
+  getAllComplaints,
+  getDepartmentComplaints,
+} from "../../../api.js";
 
 export default function DepartmentDashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [dept, setDept] = useState(null);
   const [complaints, setComplaints] = useState([]);
   const [departments, setDepartments] = useState(deptData);
-  const [showForm, setShowForm] = useState(false);
-  const [editingDept, setEditingDept] = useState(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    head: "",
-    contactPerson: "",
-    phone: "",
-    email: "",
-    address: "",
-    staffCount: "",
-  });
 
   useEffect(() => {
     const loggedDept = JSON.parse(localStorage.getItem("loggedDept"));
-    const storedComplaints = JSON.parse(localStorage.getItem("complaints") || "[]");
     if (loggedDept) setDept(loggedDept);
-    setComplaints(storedComplaints);
+
+    // fetch initial complaints from backend (department-specific if dept found)
+    const fetchComplaints = async () => {
+      try {
+        if (loggedDept && loggedDept.id) {
+          // prefer department-scoped complaints when department is logged in
+          const deptComplaints = await getDepartmentComplaints(loggedDept.id);
+          // ensure we store and display an array
+          setComplaints(Array.isArray(deptComplaints) ? deptComplaints : []);
+          // keep a copy in localStorage so other parts of the app can read it if needed
+          localStorage.setItem(
+            "complaints",
+            JSON.stringify(Array.isArray(deptComplaints) ? deptComplaints : [])
+          );
+        } else {
+          // fallback: fetch all complaints
+          const all = await getAllComplaints();
+          setComplaints(Array.isArray(all) ? all : []);
+          localStorage.setItem(
+            "complaints",
+            JSON.stringify(Array.isArray(all) ? all : [])
+          );
+        }
+      } catch (err) {
+        console.error("Error fetching complaints from backend:", err);
+        // fallback to localStorage if backend fails
+        const storedComplaints = JSON.parse(localStorage.getItem("complaints") || "[]");
+        setComplaints(storedComplaints);
+      }
+    };
+
+    fetchComplaints();
+
+    // re-sync when remote changes by listening to storage events (other tabs) or custom events
+    const onStorage = () => {
+      const stored = JSON.parse(localStorage.getItem("complaints") || "[]");
+      setComplaints(stored);
+    };
+    window.addEventListener("storage", onStorage);
+
+    // optional custom event to trigger re-fetch from backend across app
+    const reFetchListener = async (e) => {
+      // if event detail contains "refreshComplaints", refetch from server
+      if (!e?.detail || !e.detail.refreshComplaints) return;
+      await fetchComplaints();
+    };
+    window.addEventListener("app:refresh", reFetchListener);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("app:refresh", reFetchListener);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -45,41 +88,28 @@ export default function DepartmentDashboard() {
       "/Infosys_CivicPulse-Hub-Unified-Smart-City-Feedback-and-Redressal-System/loginselection";
   };
 
-  const handleInputChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const handleAddOrEdit = (e) => {
-    e.preventDefault();
-    if (editingDept) {
-      const updated = departments.map((d) =>
-        d.id === editingDept.id ? { ...formData, id: d.id } : d
-      );
-      setDepartments(updated);
-    } else {
-      const newDept = { ...formData, id: Date.now(), employees: [] };
-      setDepartments([...departments, newDept]);
+  // helper to refresh complaints from backend on-demand
+  const refreshComplaintsFromServer = async () => {
+    try {
+      if (dept && dept.id) {
+        const deptComplaints = await getDepartmentComplaints(dept.id);
+        setComplaints(Array.isArray(deptComplaints) ? deptComplaints : []);
+        localStorage.setItem(
+          "complaints",
+          JSON.stringify(Array.isArray(deptComplaints) ? deptComplaints : [])
+        );
+      } else {
+        const all = await getAllComplaints();
+        setComplaints(Array.isArray(all) ? all : []);
+        localStorage.setItem(
+          "complaints",
+          JSON.stringify(Array.isArray(all) ? all : [])
+        );
+      }
+    } catch (err) {
+      console.error("Refresh failed:", err);
     }
-    setFormData({
-      name: "",
-      head: "",
-      contactPerson: "",
-      phone: "",
-      email: "",
-      address: "",
-      staffCount: "",
-    });
-    setShowForm(false);
-    setEditingDept(null);
   };
-
-  const handleEdit = (dept) => {
-    setEditingDept(dept);
-    setFormData(dept);
-    setShowForm(true);
-  };
-
-  const handleDelete = (id) =>
-    setDepartments(departments.filter((d) => d.id !== id));
 
   const total = complaints.length;
   const resolved = complaints.filter(
@@ -92,88 +122,17 @@ export default function DepartmentDashboard() {
   const renderSection = () => {
     switch (activeSection) {
       case "track":
-        return <DeptComplaintTracking deptId={dept?.id} />;
-
+        // pass a prop to allow DeptComplaintTracking to request refresh after edits
+        return <DeptComplaintTracking deptId={dept?.id} onRefresh={refreshComplaintsFromServer} />;
       case "departments":
         return (
-          <div className="welcome-section">
-            <h1 className="welcome-title">Departments</h1>
-            <div className="dept-grid">
-              {departments.map((d) => (
-                <div key={d.id} className="card neon">
-                  <FaBuilding className="icon" />
-                  <h3>{d.name}</h3>
-                  <p><strong>Head:</strong> {d.head}</p>
-                  <p><strong>Contact:</strong> {d.contactPerson}</p>
-                  <p><strong>Phone:</strong> {d.phone}</p>
-                  <p><strong>Email:</strong> {d.email}</p>
-                  <p><strong>Address:</strong> {d.address}</p>
-                  <p><strong>Staff Count:</strong> {d.staffCount}</p>
-                  <div className="btn-group">
-                    <button className="edit-btn" onClick={() => handleEdit(d)}>
-                      <FaEdit /> Edit
-                    </button>
-                    <button className="delete-btn" onClick={() => handleDelete(d.id)}>
-                      <FaTrash /> Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              <div
-                className="card neon add-card"
-                onClick={() => {
-                  setShowForm(true);
-                  setEditingDept(null);
-                }}
-              >
-                <FaPlus className="icon" />
-                <h3>Add Department</h3>
-              </div>
-            </div>
-
-            {showForm && (
-              <div className="form-popup">
-                <form className="form-box" onSubmit={handleAddOrEdit}>
-                  <h2>{editingDept ? "Edit Department" : "Add Department"}</h2>
-                  {[
-                    "name",
-                    "head",
-                    "contactPerson",
-                    "phone",
-                    "email",
-                    "address",
-                    "staffCount",
-                  ].map((field) => (
-                    <input
-                      key={field}
-                      type="text"
-                      name={field}
-                      placeholder={field.replace(/([A-Z])/g, " $1")}
-                      value={formData[field]}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  ))}
-                  <div className="form-actions">
-                    <button type="submit" className="save-btn">Save</button>
-                    <button
-                      type="button"
-                      className="cancel-btn"
-                      onClick={() => setShowForm(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-          </div>
+          <DepartmentDetails
+            departments={departments}
+            setDepartments={setDepartments}
+          />
         );
-
       case "feedback":
         return <DepartmentFeedback deptId={dept?.id} />;
-
       default:
         return (
           <div className="welcome-section">
@@ -186,15 +145,17 @@ export default function DepartmentDashboard() {
                 <h3>Total Complaints</h3>
                 <p>{total}</p>
               </div>
-              <div className="card neon">
-                <FaUsers className="icon" />
-                <h3>Pending</h3>
-                <p>{pending}</p>
-              </div>
+
               <div className="card neon">
                 <FaCheckCircle className="icon" />
                 <h3>Resolved</h3>
                 <p>{resolved}</p>
+              </div>
+
+              <div className="card neon">
+                <FaUsers className="icon" />
+                <h3>Pending</h3>
+                <p>{pending}</p>
               </div>
             </div>
           </div>
@@ -207,16 +168,28 @@ export default function DepartmentDashboard() {
       <aside className="sidebar">
         <h2 className="sidebar-title">Civic Hub</h2>
         <ul className="sidebar-menu">
-          <li onClick={() => setActiveSection("dashboard")} className={activeSection === "dashboard" ? "active" : ""}>
+          <li
+            onClick={() => setActiveSection("dashboard")}
+            className={activeSection === "dashboard" ? "active" : ""}
+          >
             <FaHome /> Home
           </li>
-          <li onClick={() => setActiveSection("track")} className={activeSection === "track" ? "active" : ""}>
+          <li
+            onClick={() => setActiveSection("track")}
+            className={activeSection === "track" ? "active" : ""}
+          >
             <FaClipboardList /> Complaint Tracking
           </li>
-          <li onClick={() => setActiveSection("departments")} className={activeSection === "departments" ? "active" : ""}>
+          <li
+            onClick={() => setActiveSection("departments")}
+            className={activeSection === "departments" ? "active" : ""}
+          >
             <FaBuilding /> Departments
           </li>
-          <li onClick={() => setActiveSection("feedback")} className={activeSection === "feedback" ? "active" : ""}>
+          <li
+            onClick={() => setActiveSection("feedback")}
+            className={activeSection === "feedback" ? "active" : ""}
+          >
             <FaCommentDots /> Feedback
           </li>
         </ul>
@@ -228,7 +201,7 @@ export default function DepartmentDashboard() {
 
       <main className="main-content">{renderSection()}</main>
 
-      {/* === Neon UI Styles === */}
+      {/* === Neon Styles === */}
       <style jsx="true">{`
         .dashboard-container {
           display: flex;
@@ -300,190 +273,83 @@ export default function DepartmentDashboard() {
           overflow-y: auto;
         }
 
-        .welcome-title {
-          font-size: 2.4rem;
-          text-align: center;
-          color: #00eaff;
-          text-shadow: 0 0 20px #00eaff;
-          margin-bottom: 40px;
-          font-weight: 700;
+        /* === Home Section === */
+        .welcome-section {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          margin-top: 50px;
         }
 
-        /* === NEW HORIZONTAL CARDS === */
+        .welcome-title {
+          font-size: 2.8rem;
+          text-align: center;
+          color: #00eaff;
+          text-shadow: 0 0 25px #00eaff, 0 0 50px #00eaff33;
+          font-weight: 700;
+          margin-bottom: 50px;
+          letter-spacing: 1px;
+        }
+
         .cards-container {
           display: flex;
           justify-content: center;
-          align-items: stretch;
-          gap: 25px;
+          align-items: center;
+          gap: 50px;
           flex-wrap: wrap;
         }
 
-        /* === DEPARTMENT GRID === */
-        .dept-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-          gap: 25px;
-          justify-items: center;
-        }
-
         .card {
-          background: rgba(15, 20, 30, 0.9);
+          background: rgba(15, 20, 30, 0.95);
           border-radius: 15px;
-          padding: 25px;
-          width: 320px;
+          padding: 25px 40px;
           text-align: center;
-          box-shadow: 0 0 20px #00eaff22, inset 0 0 10px #00eaff22;
-          border: 1px solid #00eaff55;
+          width: 230px;
+          border: 1px solid #00eaff44;
+          box-shadow: 0 0 20px #00eaff33, inset 0 0 10px #00eaff22;
           transition: all 0.3s ease;
         }
 
+        .card.neon {
+          animation: glowPulse 3s infinite ease-in-out;
+        }
+
         .card:hover {
-          box-shadow: 0 0 30px #00eaffaa, 0 0 60px #00eaff55;
-          transform: translateY(-5px);
+          transform: scale(1.05);
+          box-shadow: 0 0 30px #00eaff99, 0 0 60px #00eaff55;
+        }
+
+        @keyframes glowPulse {
+          0% {
+            box-shadow: 0 0 10px #00eaff33, 0 0 20px #00eaff22;
+          }
+          50% {
+            box-shadow: 0 0 25px #00eaffaa, 0 0 45px #00eaff66;
+          }
+          100% {
+            box-shadow: 0 0 10px #00eaff33, 0 0 20px #00eaff22;
+          }
         }
 
         .icon {
-          font-size: 1.5rem;
+          font-size: 1.8rem;
           color: #00eaff;
           margin-bottom: 10px;
         }
 
         .card h3 {
-          color: #00eaff;
+          font-size: 1.2rem;
           font-weight: 600;
-          margin-bottom: 10px;
+          color: #00eaff;
+          margin-bottom: 8px;
         }
 
         .card p {
-          color: #ddd;
-          font-size: 0.95rem;
-          margin: 4px 0;
-        }
-
-        .btn-group {
-          display: flex;
-          justify-content: center;
-          gap: 10px;
-          margin-top: 15px;
-        }
-
-        .edit-btn,
-        .delete-btn {
-          border: none;
-          border-radius: 8px;
-          padding: 6px 12px;
-          cursor: pointer;
-          color: #fff;
-          font-size: 0.9rem;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-weight: 600;
-        }
-
-        .edit-btn {
-          background: #007bff;
-          box-shadow: 0 0 10px #007bff66;
-        }
-
-        .edit-btn:hover {
-          background: #339aff;
-          box-shadow: 0 0 15px #007bffaa;
-        }
-
-        .delete-btn {
-          background: #d9534f;
-          box-shadow: 0 0 10px #ff333366;
-        }
-
-        .delete-btn:hover {
-          background: #ff6666;
-          box-shadow: 0 0 15px #ff3333aa;
-        }
-
-        /* === FORM POPUP === */
-        .form-popup {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.8);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 1000;
-        }
-
-        .form-box {
-          background: rgba(10, 15, 25, 0.95);
-          padding: 30px 35px;
-          border-radius: 20px;
-          box-shadow: 0 0 40px #00eaff66, inset 0 0 15px #00eaff33;
-          width: 420px;
-          display: flex;
-          flex-direction: column;
-          gap: 15px;
-          border: 1px solid #00eaff55;
-          text-align: center;
-        }
-
-        .form-box h2 {
-          color: #00eaff;
-          font-size: 1.6rem;
+          font-size: 1.3rem;
           font-weight: 700;
-          margin-bottom: 10px;
-          text-shadow: 0 0 15px #00eaff;
-        }
-
-        .form-box input {
-          padding: 10px 12px;
-          border: none;
-          border-radius: 10px;
-          outline: none;
-          background: rgba(255, 255, 255, 0.1);
           color: #fff;
-          font-size: 0.95rem;
-          transition: 0.3s;
-        }
-
-        .form-box input:focus {
-          box-shadow: 0 0 10px #00eaff;
-          border: 1px solid #00eaff66;
-        }
-
-        .form-actions {
-          display: flex;
-          justify-content: space-between;
-          margin-top: 10px;
-        }
-
-        .save-btn {
-          background: #00eaff;
-          color: #000;
-          font-weight: 700;
-          padding: 8px 20px;
-          border-radius: 10px;
-          cursor: pointer;
-          transition: 0.3s;
-        }
-
-        .save-btn:hover {
-          box-shadow: 0 0 15px #00eaffaa;
-        }
-
-        .cancel-btn {
-          background: #ff4444;
-          color: #fff;
-          font-weight: 700;
-          padding: 8px 20px;
-          border-radius: 10px;
-          cursor: pointer;
-          transition: 0.3s;
-        }
-
-        .cancel-btn:hover {
-          box-shadow: 0 0 15px #ff4444aa;
+          margin-top: 5px;
         }
       `}</style>
     </div>

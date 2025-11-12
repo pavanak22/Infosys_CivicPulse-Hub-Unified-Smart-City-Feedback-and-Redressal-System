@@ -15,6 +15,9 @@ import AdminFeedback from "../../Feedback/AdminFeedback.jsx";
 import AdminAnalytics from "./AdminAnalytics.jsx";
 import SLAAnalysis from "./SLAAnalysis.jsx"; // ✅ Correct name
 
+// 🔹 Added for backend connection
+import { getAllComplaints } from "../../../api.js"; // ✅ correct relative path
+
 export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [complaints, setComplaints] = useState([]);
@@ -23,9 +26,17 @@ export default function AdminDashboard() {
 
   // ✅ Fetch and auto-refresh complaints when data changes anywhere
   useEffect(() => {
-    const loadComplaints = () => {
-      const stored = JSON.parse(localStorage.getItem("complaints") || "[]");
-      setComplaints(stored);
+    const loadComplaints = async () => {
+      try {
+        // 🔹 Fetch from backend API (instead of localStorage only)
+        const data = await getAllComplaints();
+        setComplaints(data);
+        console.log("✅ Complaints loaded from backend:", data);
+      } catch (err) {
+        console.error("⚠️ Backend not reachable, using localStorage:", err);
+        const stored = JSON.parse(localStorage.getItem("complaints") || "[]");
+        setComplaints(stored);
+      }
     };
 
     loadComplaints();
@@ -55,11 +66,13 @@ export default function AdminDashboard() {
   const renderSection = () => {
     switch (activeSection) {
       case "track":
-        return <AdminTrackComplaints />;
+        // 🔹 Pass backend complaints data to AdminTrackComplaints
+        return <AdminTrackComplaints complaints={complaints} />;
       case "feedback":
         return <AdminFeedback />;
       case "analytics":
-        return <AdminAnalytics />;
+        // 🔹 Pass complaints to analytics for charts
+        return <AdminAnalytics complaints={complaints} />;
       case "sle":
         return <SLAAnalysis complaints={complaints} />; // ✅ Pass updated data
       default:
